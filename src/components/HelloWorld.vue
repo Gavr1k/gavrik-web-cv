@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <button @click="addSphere">Add sphere</button>
     <Renderer resize="window" orbit-ctrl>
       <Camera :position="{ z: 70 }" />
       <Scene>
@@ -10,14 +11,16 @@
           :intensity="1"
         />
         <Sphere
+          v-for="(sphere, index) in spheres"
+          :key="index"
           :radius="10"
           :width-segments="64"
           :height-segments="64"
-          :position="spherePosition"
+          :position="sphere.position"
           ref="sphere"
         >
           <LambertMaterial
-            :color="'#ff7f00'"
+            :color="sphere.color"
             :specular="'#ffffff'"
             :shininess="100"
           />
@@ -51,17 +54,32 @@ export default defineComponent({
     DirectionalLight,
   },
   setup() {
-    const spherePosition = ref({ x: 0, y: 0, z: 0 });
-    let direction = -1;
+    const spheres = ref<
+      {
+        position: { x: number; y: number; z: number };
+        color: string;
+        angle: number;
+      }[]
+    >([]);
+    let direction = 1;
 
     const animate = () => {
-      spherePosition.value.y += direction;
-
-      if (spherePosition.value.y > 100 || spherePosition.value.y < -100) {
-        direction *= -1;
-      }
+      spheres.value.forEach((sphere) => {
+        sphere.angle += 0.015;
+        sphere.position.y = 50 * Math.sin(sphere.angle);
+        sphere.position.x = 50 * Math.cos(sphere.angle);
+      });
 
       requestAnimationFrame(animate);
+    };
+
+    const addSphere = () => {
+      const newSphere = {
+        position: { x: 0, y: 0, z: 0 },
+        color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+        angle: Math.random() * Math.PI * 2,
+      };
+      spheres.value.push(newSphere);
     };
 
     onMounted(() => {
@@ -69,7 +87,8 @@ export default defineComponent({
     });
 
     return {
-      spherePosition,
+      spheres,
+      addSphere,
     };
   },
 });
